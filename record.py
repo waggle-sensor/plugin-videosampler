@@ -2,6 +2,7 @@
 
 import os
 import time
+import argparse
 
 import ffmpeg
 
@@ -27,7 +28,7 @@ def run(args):
     stream_url = resolve_device(args.stream)
 
     # Assume PyWaggle's timestamp is in nano seconds
-    timestamp = get_timestamp() + skip_second * 1e9
+    timestamp = get_timestamp() + args.skip_second * 1e9
     try:
         script_dir = os.path.dirname(__file__)
     except NameError:
@@ -47,9 +48,9 @@ def run(args):
 
         d = ffmpeg.input(filename_raw)
         if args.resampling:
-            print(f'Resampling to {stream.resampling_fps}...')
+            print(f'Resampling to {args.resampling_fps}...')
             d = ffmpeg.filter(d, 'fps', fps=args.resampling_fps)
-        d = output(filename, f='mp4', t=args.duration).overwrite_output()
+        d = ffmpeg.output(d, filename, f='mp4', t=args.duration).overwrite_output()
         # print(d.compile())
         d.run()
 
@@ -81,8 +82,8 @@ if __name__=='__main__':
         action='store', default=3., type=float,
         help='Seconds to skip before recording')
     parser.add_argument(
-        '-resampling', dest='resampling',
-        action='store_false', help="Resampling the sample to -resample-fps option (defualt 12)")
+        '-resampling', dest='resampling', default=False,
+        action='store_true', help="Resampling the sample to -resample-fps option (defualt 12)")
     parser.add_argument(
         '-resampling-fps', dest='resampling_fps',
         action='store', default=12., type=float,
