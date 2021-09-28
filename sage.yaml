@@ -1,0 +1,20 @@
+name: "videosampler"
+description: "Video sampler"
+version : "0.0.0"
+namespace: "sage"
+source:
+  architectures :
+    - "linux/arm64"
+  url: "https://github.com/waggle-sensor/plugin-videosampler.git"
+  branch: "main"
+inputs:
+  - id: "stream"
+    type: "string"
+  - id: "interval"
+    type: "int"
+  - id: "duration"
+    type: "float"
+  - id: "skip_second"
+    type: "float"
+  - id: "resampling_fps"
+    type: "float"
