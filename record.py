@@ -40,7 +40,7 @@ def need_resampling(filepath, target_fps):
 
 def take_sample(stream, duration, skip_second, resampling, resampling_fps):
     # Assume PyWaggle's timestamp is in nano seconds
-    timestamp = get_timestamp() + args.skip_second * 1e9
+    timestamp = get_timestamp() + skip_second * 1e9
     try:
         script_dir = os.path.dirname(__file__)
     except NameError:
@@ -64,7 +64,7 @@ def take_sample(stream, duration, skip_second, resampling, resampling_fps):
     print(d.compile())
     d.run(quiet=True)
     # TODO: We may want to inspect whether the ffmpeg commands succeeded
-    return True, filename
+    return True, filename, timestamp
 
 
 def run_on_event(args):
@@ -83,7 +83,7 @@ def run_on_event(args):
 
         if eval(condition, topics):
             print(f'{args.condition} is valid. Getting a video sample...', flush=True)
-            ret, filename = take_sample(
+            ret, filename, timestamp = take_sample(
                 stream=stream_url,
                 duration=args.duration,
                 skip_second=args.skip_second,
@@ -93,7 +93,7 @@ def run_on_event(args):
 
             if ret:
                 print('Uploading...', flush=True)
-                plugin.upload_file(filename)
+                plugin.upload_file(filename, timestamp=timestamp)
                 print('Done', flush=True)
             else:
                 print(f'Failed to take a video sample.', flush=True)
@@ -103,6 +103,7 @@ def run_on_event(args):
             topics = {}
         else:
             time.sleep(0.1)
+    return 0
 
 
 def run_periodically(args):
@@ -111,7 +112,7 @@ def run_periodically(args):
 
     while True:
         print(f'Sampling {stream_url}...', flush=True)
-        ret, filename = take_sample(
+        ret, filename, timestamp = take_sample(
             stream=stream_url,
             duration=args.duration,
             skip_second=args.skip_second,
@@ -120,7 +121,7 @@ def run_periodically(args):
         )
         if ret:
             print('Uploading...', flush=True)
-            plugin.upload_file(filename)
+            plugin.upload_file(filename, timestamp=timestamp)
             print('Done', flush=True)
         else:
             print(f'Failed to take a video sample.', flush=True)
@@ -128,7 +129,6 @@ def run_periodically(args):
 
         if args.interval > 0:
             time.sleep(args.interval)
-
     return 0
 
 
