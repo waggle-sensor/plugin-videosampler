@@ -10,4 +10,8 @@ python3 record.py -stream rtsp://IP:PORT/media.smp -duration 30
 # sample a 10-second video clip from an rtsp stream
 # and resample the video to get a 12 frames-per-second video
 python3 record.py -stream rtsp://IP:PORT/media.smp -duration 30 -resampling -resampling-fps 12
+
+# sample a 5-second video clip from an rtsp stream
+# when there is one or more cars recognized
+python3 record.py -stream rtsp://IP_PORT/media.smp -duration 5 -condition "env.count.car > 0"
 ```
