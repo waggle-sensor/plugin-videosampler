@@ -26,6 +26,6 @@ inputs:
   - id: "condition"
     type: "string"
   - id: "resampling"
-    type: "bool"
+    type: "boolean"
   - id: "resampling_fps"
     type: "float"
