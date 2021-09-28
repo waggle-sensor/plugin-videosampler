@@ -39,6 +39,7 @@ def need_resampling(filepath, target_fps):
 
 
 def take_sample(stream, duration, skip_second, resampling, resampling_fps):
+    stream_url = resolve_device(stream)
     # Assume PyWaggle's timestamp is in nano seconds
     timestamp = get_timestamp() + skip_second * 1e9
     try:
@@ -48,7 +49,7 @@ def take_sample(stream, duration, skip_second, resampling, resampling_fps):
     filename_raw = os.path.join(script_dir, 'sample_raw.mp4')
     filename = os.path.join(script_dir, 'sample.mp4')
 
-    c = ffmpeg.input(stream, ss=skip_second).output(
+    c = ffmpeg.input(stream_url, ss=skip_second).output(
         filename_raw,
         codec = "copy", # use same codecs of the original video
         f='mp4',
@@ -84,7 +85,7 @@ def run_on_event(args):
         if eval(condition, topics):
             print(f'{args.condition} is valid. Getting a video sample...', flush=True)
             ret, filename, timestamp = take_sample(
-                stream=stream_url,
+                stream=args.stream,
                 duration=args.duration,
                 skip_second=args.skip_second,
                 resampling=args.resampling,
@@ -108,12 +109,11 @@ def run_on_event(args):
 
 def run_periodically(args):
     print(f'Starting video sampler periodically with {args.interval} seconds interval', flush=True)
-    stream_url = resolve_device(args.stream)
 
     while True:
-        print(f'Sampling {stream_url}...', flush=True)
+        print(f'Sampling {args.stream}...', flush=True)
         ret, filename, timestamp = take_sample(
-            stream=stream_url,
+            stream=args.stream,
             duration=args.duration,
             skip_second=args.skip_second,
             resampling=args.resampling,
