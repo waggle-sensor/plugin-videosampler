@@ -2,9 +2,16 @@ name: "videosampler"
 description: "Video sampler"
 version : "0.0.0"
 namespace: "sage"
+keywords: "video, sampling, camera, data"
+authors: "Yongho Kim <yongho.kim@anl.gov>"
+collaborators: "Waggle Team <https://wa8.gl>"
+funding: 
+license: "The license agreed by Argonne National Laboratory"
+homepage: "https://github.com/waggle-sensor/plugin-videosampler/blob/main/README.md"
 source:
   architectures :
     - "linux/arm64"
+    - "linux/amd64"
   url: "https://github.com/waggle-sensor/plugin-videosampler.git"
   branch: "main"
 inputs:
