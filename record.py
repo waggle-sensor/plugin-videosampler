@@ -41,7 +41,7 @@ def need_resampling(filepath, target_fps):
 def take_sample(stream, duration, skip_second, resampling, resampling_fps):
     stream_url = resolve_device(stream)
     # Assume PyWaggle's timestamp is in nano seconds
-    timestamp = get_timestamp() + skip_second * 1e9
+    timestamp = get_timestamp() + (skip_second * 1e9)
     try:
         script_dir = os.path.dirname(__file__)
     except NameError:
@@ -82,7 +82,14 @@ def run_on_event(args):
         if time.time() * 1e9 - msg.timestamp <= 5 * 1e9:
             topics[msg.name.replace('.', '_')] = msg.value
 
-        if eval(condition, topics):
+        # Check if given condition is valid
+        result = False
+        try:
+            result = eval(condition, topics)
+        except:
+            pass
+
+        if result:
             print(f'{args.condition} is valid. Getting a video sample...', flush=True)
             ret, filename, timestamp = take_sample(
                 stream=args.stream,
