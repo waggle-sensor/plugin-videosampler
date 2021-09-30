@@ -41,7 +41,7 @@ def need_resampling(filepath, target_fps):
 def take_sample(stream, duration, skip_second, resampling, resampling_fps):
     stream_url = resolve_device(stream)
     # Assume PyWaggle's timestamp is in nano seconds
-    timestamp = get_timestamp() + (skip_second * 1e9)
+    timestamp = get_timestamp() + int(skip_second * 1e9)
     try:
         script_dir = os.path.dirname(__file__)
     except NameError:
