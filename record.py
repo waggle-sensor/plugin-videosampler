@@ -51,7 +51,7 @@ def take_sample(stream, duration, skip_second, resampling, resampling_fps):
 
     c = ffmpeg.input(stream_url, ss=skip_second).output(
         filename_raw,
-        codec = "copy", # use same codecs of the original video
+        codec="copy", # use same codecs of the original video
         f='mp4',
         t=duration).overwrite_output()
     print(c.compile())
@@ -61,7 +61,9 @@ def take_sample(stream, duration, skip_second, resampling, resampling_fps):
     if resampling:
         print(f'Resampling to {resampling_fps}...')
         d = ffmpeg.filter(d, 'fps', fps=resampling_fps)
-    d = ffmpeg.output(d, filename, f='mp4', t=duration).overwrite_output()
+        d = ffmpeg.output(d, filename, f='mp4', t=duration).overwrite_output()
+    else:
+        d = ffmpeg.output(d, filename, codec="copy", f='mp4', t=duration).overwrite_output()
     print(d.compile())
     d.run(quiet=True)
     # TODO: We may want to inspect whether the ffmpeg commands succeeded
