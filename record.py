@@ -7,11 +7,9 @@ import argparse
 
 import ffmpeg
 
-from waggle import plugin
+from waggle.plugin import Plugin
 from waggle.data.vision import resolve_device
 from waggle.data.timestamp import get_timestamp
-
-plugin.init()
 
 
 def extract_topics(expr):
@@ -72,27 +70,56 @@ def take_sample(stream, duration, skip_second, resampling, resampling_fps):
 
 def run_on_event(args):
     print(f'Starting video sampler whenever {args.condition} becomes valid', flush=True)
-    topics = {}
-    condition = args.condition.replace('.', '_')
-    for t in extract_topics(condition):
-        topics[t] = 0.
-        plugin.subscribe(t.replace('_', '.'))
+    with Plugin() as plugin:
+        topics = {}
+        condition = args.condition.replace('.', '_')
+        for t in extract_topics(condition):
+            topics[t] = 0.
+            plugin.subscribe(t.replace('_', '.'))
 
-    while True:
-        msg = plugin.get()
-        # NOTE: We do not care any messages older than 5 seconds
-        if time.time() * 1e9 - msg.timestamp <= 5 * 1e9:
-            topics[msg.name.replace('.', '_')] = msg.value
+        while True:
+            msg = plugin.get()
+            # NOTE: We do not care any messages older than 5 seconds
+            if time.time() * 1e9 - msg.timestamp <= 5 * 1e9:
+                topics[msg.name.replace('.', '_')] = msg.value
 
-        # Check if given condition is valid
-        result = False
-        try:
-            result = eval(condition, topics)
-        except:
-            pass
+            # Check if given condition is valid
+            result = False
+            try:
+                result = eval(condition, topics)
+            except:
+                pass
 
-        if result:
-            print(f'{args.condition} is valid. Getting a video sample...', flush=True)
+            if result:
+                print(f'{args.condition} is valid. Getting a video sample...', flush=True)
+                ret, filename, timestamp = take_sample(
+                    stream=args.stream,
+                    duration=args.duration,
+                    skip_second=args.skip_second,
+                    resampling=args.resampling,
+                    resampling_fps=args.resampling_fps
+                )
+
+                if ret:
+                    print('Uploading...', flush=True)
+                    plugin.upload_file(filename, timestamp=timestamp)
+                    print('Done', flush=True)
+                else:
+                    print(f'Failed to take a video sample.', flush=True)
+                    return 1
+
+                print(f'Resetting the condition: {args.condition}', flush=True)
+                topics = {}
+            else:
+                time.sleep(0.1)
+    return 0
+
+
+def run_periodically(args):
+    print(f'Starting video sampler periodically with {args.interval} seconds interval', flush=True)
+    with Plugin() as plugin:
+        while True:
+            print(f'Sampling {args.stream}...', flush=True)
             ret, filename, timestamp = take_sample(
                 stream=args.stream,
                 duration=args.duration,
@@ -100,7 +127,6 @@ def run_on_event(args):
                 resampling=args.resampling,
                 resampling_fps=args.resampling_fps
             )
-
             if ret:
                 print('Uploading...', flush=True)
                 plugin.upload_file(filename, timestamp=timestamp)
@@ -109,35 +135,8 @@ def run_on_event(args):
                 print(f'Failed to take a video sample.', flush=True)
                 return 1
 
-            print(f'Resetting the condition: {args.condition}', flush=True)
-            topics = {}
-        else:
-            time.sleep(0.1)
-    return 0
-
-
-def run_periodically(args):
-    print(f'Starting video sampler periodically with {args.interval} seconds interval', flush=True)
-
-    while True:
-        print(f'Sampling {args.stream}...', flush=True)
-        ret, filename, timestamp = take_sample(
-            stream=args.stream,
-            duration=args.duration,
-            skip_second=args.skip_second,
-            resampling=args.resampling,
-            resampling_fps=args.resampling_fps
-        )
-        if ret:
-            print('Uploading...', flush=True)
-            plugin.upload_file(filename, timestamp=timestamp)
-            print('Done', flush=True)
-        else:
-            print(f'Failed to take a video sample.', flush=True)
-            return 1
-
-        if args.interval > 0:
-            time.sleep(args.interval)
+            if args.interval > 0:
+                time.sleep(args.interval)
     return 0
 
 

@@ -1,6 +1,6 @@
-name: "videosampler"
+name: "video-sampler"
 description: "Video sampler"
-version : "0.0.0"
+version : "0.0.1"
 namespace: "sage"
 keywords: "video, sampling, camera, data"
 authors: "Yongho Kim <yongho.kim@anl.gov>"
