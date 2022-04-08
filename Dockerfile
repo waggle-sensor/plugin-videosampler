@@ -9,6 +9,7 @@ RUN apt-get update \
 
 # COPY app.py /app/
 COPY record.py requirements.txt /app/
-RUN pip3 install --no-cache-dir --upgrade -r /app/requirements.txt
+RUN pip3 uninstall waggle \
+  && pip3 install --no-cache-dir --upgrade -r /app/requirements.txt
 
 ENTRYPOINT ["python3", "-u", "/app/record.py"]
