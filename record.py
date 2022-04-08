@@ -117,8 +117,13 @@ def run_on_event(args):
 
 def run_periodically(args):
     print(f'Starting video sampler periodically with {args.interval} seconds interval', flush=True)
+    if args.samples > -1:
+        sample_count = args.samples
+    else:
+        sample_count = 100
+    count = 0
     with Plugin() as plugin:
-        while True:
+        while sample_count > count:
             print(f'Sampling {args.stream}...', flush=True)
             ret, filename, timestamp = take_sample(
                 stream=args.stream,
@@ -134,9 +139,10 @@ def run_periodically(args):
             else:
                 print(f'Failed to take a video sample.', flush=True)
                 return 1
-
             if args.interval > 0:
                 time.sleep(args.interval)
+            if args.samples > -1:
+                count += 1
     return 0
 
 
@@ -150,6 +156,10 @@ if __name__=='__main__':
         '-interval', dest='interval',
         action='store', default=0, type=int,
         help='Sampling interval in seconds')
+    parser.add_argument(
+        '-samples', dest='interval',
+        action='store', default=-1, type=int,
+        help='Number of samples. -1 samples videos indefinitely. Working only without -condition option.')
     parser.add_argument(
         '-duration', dest='duration',
         action='store', default=10., type=float,
