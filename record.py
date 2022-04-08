@@ -157,7 +157,7 @@ if __name__=='__main__':
         action='store', default=0, type=int,
         help='Sampling interval in seconds')
     parser.add_argument(
-        '-samples', dest='interval',
+        '-samples', dest='samples',
         action='store', default=-1, type=int,
         help='Number of samples. -1 samples videos indefinitely. Working only without -condition option.')
     parser.add_argument(
