@@ -36,7 +36,7 @@ def need_resampling(filepath, target_fps):
         return False
 
 
-def take_sample(stream, duration, skip_second, resampling, resampling_fps):
+def take_sample(stream, duration, skip_second, codec, resampling, resampling_fps):
     stream_url = resolve_device(stream)
     # Assume PyWaggle's timestamp is in nano seconds
     timestamp = get_timestamp() + int(skip_second * 1e9)
@@ -49,7 +49,7 @@ def take_sample(stream, duration, skip_second, resampling, resampling_fps):
 
     c = ffmpeg.input(stream_url, ss=skip_second).output(
         filename_raw,
-        codec="copy", # use same codecs of the original video
+        codec=codec, # use same codecs of the original video
         f='mp4',
         t=duration).overwrite_output()
     print(c.compile())
@@ -96,6 +96,7 @@ def run_on_event(args):
                     stream=args.stream,
                     duration=args.duration,
                     skip_second=args.skip_second,
+                    code=args.codec,
                     resampling=args.resampling,
                     resampling_fps=args.resampling_fps
                 )
@@ -129,6 +130,7 @@ def run_periodically(args):
                 stream=args.stream,
                 duration=args.duration,
                 skip_second=args.skip_second,
+                codec=args.codec,
                 resampling=args.resampling,
                 resampling_fps=args.resampling_fps
             )
@@ -168,6 +170,10 @@ if __name__=='__main__':
         '-skip-second', dest='skip_second',
         action='store', default=3., type=float,
         help='Seconds to skip before recording')
+    parser.add_argument(
+        '-codec', dest='codec',
+        action='store', default="copy", type=str,
+        help='Codec name to use. Default is the codec inherited from the source')
     parser.add_argument(
         '-condition', dest='condition',
         action='store', default="", type=str,
