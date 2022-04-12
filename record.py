@@ -4,6 +4,7 @@ import os
 import re
 import time
 import argparse
+import logging
 
 import ffmpeg
 
@@ -32,7 +33,7 @@ def need_resampling(filepath, target_fps):
         #       in case r_frame_rate does not equal exactly to the fps
         return False if (target_fps * 0.9) <= eval(f) <= (target_fps * 1.1) else True
     except:
-        print(f'Could not probe {filepath} to get framerate. Cannot determine if resampling is needed', flush=True)
+        logging.info('Could not probe %s to get framerate. Cannot determine if resampling is needed', filepath)
         return False
 
 
@@ -52,24 +53,24 @@ def take_sample(stream, duration, skip_second, codec, resampling, resampling_fps
         codec=codec, # use same codecs of the original video
         f='mp4',
         t=duration).overwrite_output()
-    print(c.compile())
+    logging.info("running command: %s", c.compile())
     c.run(quiet=True)
 
     d = ffmpeg.input(filename_raw)
     if resampling:
-        print(f'Resampling to {resampling_fps}...')
+        logging.info('Resampling to %s...', resampling_fps)
         d = ffmpeg.filter(d, 'fps', fps=resampling_fps)
         d = ffmpeg.output(d, filename, f='mp4', t=duration).overwrite_output()
     else:
         d = ffmpeg.output(d, filename, codec="copy", f='mp4', t=duration).overwrite_output()
-    print(d.compile())
+    logging.info("running command: %s", d.compile())
     d.run(quiet=True)
     # TODO: We may want to inspect whether the ffmpeg commands succeeded
     return True, filename, timestamp
 
 
 def run_on_event(args):
-    print(f'Starting video sampler whenever {args.condition} becomes valid', flush=True)
+    logging.info('Starting video sampler whenever %s becomes valid', args.condition)
     with Plugin() as plugin:
         topics = {}
         condition = args.condition.replace('.', '_')
@@ -91,7 +92,7 @@ def run_on_event(args):
                 pass
 
             if result:
-                print(f'{args.condition} is valid. Getting a video sample...', flush=True)
+                logging.info('%s is valid. Getting a video sample...', args.condition)
                 ret, filename, timestamp = take_sample(
                     stream=args.stream,
                     duration=args.duration,
@@ -102,14 +103,14 @@ def run_on_event(args):
                 )
 
                 if ret:
-                    print('Uploading...', flush=True)
+                    logging.info('Uploading...')
                     plugin.upload_file(filename, timestamp=timestamp)
-                    print('Done', flush=True)
+                    logging.info('Done')
                 else:
-                    print(f'Failed to take a video sample.', flush=True)
+                    logging.info('Failed to take a video sample.')
                     return 1
 
-                print(f'Resetting the condition: {args.condition}', flush=True)
+                logging.info('Resetting the condition: %s', args.condition)
                 topics = {}
             else:
                 time.sleep(0.1)
@@ -117,7 +118,7 @@ def run_on_event(args):
 
 
 def run_periodically(args):
-    print(f'Starting video sampler periodically with {args.interval} seconds interval', flush=True)
+    logging.info('Starting video sampler periodically with %s seconds interval', args.interval)
     if args.samples > -1:
         sample_count = args.samples
     else:
@@ -125,7 +126,7 @@ def run_periodically(args):
     count = 0
     with Plugin() as plugin:
         while sample_count > count:
-            print(f'Sampling {args.stream}...', flush=True)
+            logging.info('Sampling %s...', args.stream)
             ret, filename, timestamp = take_sample(
                 stream=args.stream,
                 duration=args.duration,
@@ -135,11 +136,11 @@ def run_periodically(args):
                 resampling_fps=args.resampling_fps
             )
             if ret:
-                print('Uploading...', flush=True)
+                logging.info('Uploading...')
                 plugin.upload_file(filename, timestamp=timestamp)
-                print('Done', flush=True)
+                logging.info('Done')
             else:
-                print(f'Failed to take a video sample.', flush=True)
+                logging.info('Failed to take a video sample.')
                 return 1
             if args.interval > 0:
                 time.sleep(args.interval)
@@ -150,6 +151,7 @@ def run_periodically(args):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("-debug", action="store_true", help="enable debug logs")
     parser.add_argument(
         '-stream', dest='stream',
         action='store', default="camera", type=str,
@@ -186,6 +188,13 @@ if __name__=='__main__':
         action='store', default=12., type=float,
         help='Target frames per second that will be resampled from input video')
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.INFO,
+        format="%(asctime)s %(message)s",
+        datefmt="%Y/%m/%d %H:%M:%S",
+    )
+
     if args.condition == "":
         exit(run_periodically(args))
     else:
