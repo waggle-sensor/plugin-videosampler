@@ -1,5 +1,5 @@
 FROM waggle/plugin-base:1.1.1-base
-LABEL version="0.2.0" \
+LABEL version="0.2.2" \
       description="Video sampler"
 
 RUN apt-get update \
