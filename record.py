@@ -48,7 +48,13 @@ def take_sample(stream, duration, skip_second, codec, resampling, resampling_fps
     filename_raw = os.path.join(script_dir, 'sample_raw.mp4')
     filename = os.path.join(script_dir, 'sample.mp4')
 
-    c = ffmpeg.input(stream_url, ss=skip_second).output(
+    # To prevent corruption in frames we prefer tcp transfer for rtsp
+    if stream_url.startswith("rtsp"):
+        c = ffmpeg.input(stream_url, rtsp_transport="tcp", ss=skip_second)
+    else:
+        c = ffmpeg.input(stream_url, ss=skip_second)
+    c = ffmpeg.output(
+        c,
         filename_raw,
         codec=codec, # use same codecs of the original video
         f='mp4',
