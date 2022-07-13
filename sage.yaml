@@ -1,6 +1,6 @@
 name: "video-sampler"
 description: "Video sampler"
-version : "0.2.3"
+version : "0.2.4"
 namespace: "sage"
 keywords: "video, sampling, camera, data"
 authors: "Yongho Kim <yongho.kim@anl.gov>"
@@ -17,6 +17,8 @@ source:
 inputs:
   - id: "stream"
     type: "string"
+  - id: "continuous"
+    type: "boolean"
   - id: "interval"
     type: "int"
   - id: "samples"

@@ -115,7 +115,8 @@ def run_on_event(args):
                 else:
                     logging.info('Failed to take a video sample.')
                     return 1
-
+                if not args.continuous:
+                    break
                 logging.info('Resetting the condition: %s', args.condition)
                 topics = {}
             else:
@@ -148,6 +149,8 @@ def run_periodically(args):
             else:
                 logging.info('Failed to take a video sample.')
                 return 1
+            if not args.continuous:
+                break
             if args.interval > 0:
                 time.sleep(args.interval)
             if args.samples > -1:
@@ -162,6 +165,10 @@ if __name__=='__main__':
         '-stream', dest='stream',
         action='store', default="camera", type=str,
         help='ID or name of a stream, e.g. sample')
+    parser.add_argument(
+        '-continuous', dest='continuous',
+        action='store_true',
+        help='Run continuousely with given -interval or -condition')
     parser.add_argument(
         '-interval', dest='interval',
         action='store', default=0, type=int,
